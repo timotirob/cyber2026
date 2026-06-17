@@ -1,0 +1,15 @@
+composer.lock
+.phpunit.result.cache
+
+# Dépendances PHP
+/vendor/
+
+# Configuration secrète (Très important !)
+.env
+
+# Cache et logs spécifiques à MiniNagios
+/storage/logs/*.log
+/cache/
+
+# Fichiers Docker locaux (si vous créez des volumes locaux)
+docker-data/

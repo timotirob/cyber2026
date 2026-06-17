@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Client API - Mini-Nagios</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; max-width: 800px; margin: auto; }
+    button { padding: 10px 15px; background: #28a745; color: white; border: none; cursor: pointer; font-size: 16px; border-radius: 4px; }
+    .serveur-item { background: #f8f9fa; margin: 10px 0; padding: 15px; border-left: 5px solid #007bff; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .ip-badge { background: #17a2b8; color: white; padding: 3px 8px; border-radius: 12px; font-size: 14px; }
+  </style>
+</head>
+<body>
+<h1>📡 Consommation de l'API REST</h1>
+<button id="btnLoad">⬇️ Charger les serveurs via API</button>
+
+<ul id="listeServeurs" style="list-style-type: none; padding: 0; margin-top: 20px;"></ul>
+
+<script>
+  document.getElementById('btnLoad').addEventListener('click', function() {
+    const ul = document.getElementById('listeServeurs');
+    ul.innerHTML = '<i>Chargement en cours...</i>'; // Feedback visuel pour l'utilisateur
+
+    // Appel de l'API avec la méthode fetch()
+    fetch('/api/serveurs.php', {
+      method: 'GET',
+      headers: {
+        'X-API-KEY': 'BtsSlamApi2026' // La clé d'authentification exigée par notre back-end
+      }
+    })
+            .then(response => {
+              // Si le statut HTTP n'est pas 200 OK (ex: 401 Unauthorized)
+              if (!response.ok) {
+                throw new Error('Erreur HTTP : ' + response.status);
+              }
+              // On transforme la réponse texte en un objet JavaScript manipulable
+              return response.json();
+            })
+            .then(data => {
+              ul.innerHTML = ''; // On vide la liste d'attente
+
+              // Si la base de données est vide
+              if(data.length === 0) {
+                ul.innerHTML = '<li>Aucun serveur trouvé.</li>';
+                return;
+              }
+
+              // On boucle sur chaque serveur reçu
+              data.forEach(serveur => {
+                let li = document.createElement('li');
+                li.className = 'serveur-item';
+
+                // On construit le HTML dynamiquement avec les données de l'API
+                li.innerHTML = `
+                        <strong>${serveur.hostname}</strong>
+                        <span class="ip-badge">${serveur.ip}</span><br>
+                        <small>Système : ${serveur.os} | Ajouté le : ${serveur.date_creation}</small>
+                    `;
+
+                ul.appendChild(li); // On injecte le li dans le ul
+              });
+            })
+            .catch(error => {
+              console.error("Erreur détaillée :", error);
+              ul.innerHTML = `<li style="color: red; font-weight: bold;">❌ Erreur de connexion à l'API. Vérifiez votre clé ou que le serveur PHP tourne !</li>`;
+            });
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,47 @@
+services:
+  # 1. Moteur d'application Web PHP (Apache + Ext BDD PostgreSQL)
+  web-php:
+    build: .
+    container_name: nagios_php_server
+    ports:
+      - "8082:80"
+    volumes:
+      - .:/var/www/html
+
+  # 2. Serveur de Base de Données Relationnelle PostgreSQL
+  postgres-db:
+    image: postgres:16-alpine
+    container_name: nagios_postgres
+    environment:
+      POSTGRES_USER: prof_sio
+      POSTGRES_PASSWORD: SecretPassword123!
+      POSTGRES_DB: mininagios
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # 3. Serveur SMTP de Capture de Mails (Dev/Cybersécurité)
+  mail-server:
+    image: axllent/mailpit
+    container_name: nagios_mailpit
+    ports:
+      - "8027:8025"
+
+  # 4. Serveur NoSQL de Cache et de Session (Redis)
+  redis-cache:
+    image: redis:7-alpine
+    container_name: nagios_redis
+    ports:
+      - "6380:6379"
+
+  # 5. L'Outil CLI Composer (Pour installer Symfony et les Packages)
+  composer:
+    image: composer:latest
+    container_name: nagios_composer
+    volumes:
+      - ./projets_php:/app
+
+# 🌟 LA LIGNE MANQUANTE QUI CAUSAIT L'ERREUR :
+volumes:
+  postgres_data:
