@@ -122,6 +122,65 @@ Lancer les tests :
 docker exec nagios_php_server ./vendor/bin/phpunit
 ```
 
+## Paire de clés de démonstration
+
+Le dossier `config/` contient une paire de clés RSA 2048 bits, `private_key.pem`
+et `public_key.pem`, utilisée par `App\CryptoService` pour chiffrer les données
+sensibles. Elle est fournie pour ceux qui n'ont pas réussi à monter leur propre
+PKI, afin que personne ne reste bloqué sur cette étape.
+
+> ### ⚠️ Cette clé privée est versionnée *volontairement*, et c'est une exception
+>
+> **Dans une application réelle, une clé privée ne se trouve jamais dans un dépôt
+> Git.** Elle serait lisible par toute personne ayant accès au code — y compris
+> un prestataire, un stagiaire, ou n'importe qui en cas de fuite du dépôt. Et
+> comme Git conserve tout, elle resterait récupérable dans l'historique **même
+> après avoir été supprimée**, dans chaque commit antérieur et dans chaque copie
+> déjà clonée. C'est précisément pour cette raison que le fichier `.env`, lui,
+> est exclu de Git.
+>
+> Cette paire-ci n'est qu'un jouet : elle ne protège aucune donnée réelle et
+> chacun peut la lire, donc elle ne garantit **aucune confidentialité**. Ne la
+> réutilisez jamais ailleurs que dans ce TP.
+>
+> En production, une clé privée se stocke hors du dépôt : variable
+> d'environnement, volume monté, ou coffre-fort de secrets (Vault, KMS,
+> Docker secrets).
+
+### Générer votre propre paire
+
+C'est la démarche recommandée. Placez-vous dans le dossier `MiniNagios` :
+
+```bash
+# 1. La clé privée (RSA 2048 bits, format PKCS#8)
+docker exec nagios_php_server openssl genpkey \
+    -algorithm RSA -pkeyopt rsa_keygen_bits:2048 \
+    -out /var/www/html/config/private_key.pem
+
+# 2. La clé publique, dérivée de la privée
+docker exec nagios_php_server openssl pkey \
+    -in /var/www/html/config/private_key.pem \
+    -pubout -out /var/www/html/config/public_key.pem
+```
+
+Vérifier que les deux clés forment bien une paire — les deux empreintes doivent
+être **identiques** :
+
+```bash
+docker exec nagios_php_server sh -c 'openssl pkey -in /var/www/html/config/private_key.pem -pubout -outform DER | openssl dgst -sha256'
+docker exec nagios_php_server sh -c 'openssl pkey -pubin -in /var/www/html/config/public_key.pem -outform DER | openssl dgst -sha256'
+```
+
+Si vous générez votre propre clé privée, **ajoutez-la à `.gitignore`** avant de
+committer quoi que ce soit :
+
+```
+config/private_key.pem
+```
+
+La clé publique, elle, peut rester versionnée : c'est sa raison d'être d'être
+diffusée.
+
 ## Suivre la progression des séances
 
 Le dépôt porte un tag par séance, correspondant à son état **corrigé** :
