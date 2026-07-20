@@ -69,6 +69,39 @@ class Journal
     }
 
     /**
+     * Liste les évènements du journal, avec deux filtres optionnels.
+     *
+     * L'astuce (:param IS NULL OR colonne = :param) vient du sujet 2026 :
+     * si le paramètre n'est pas fourni, la condition est vraie pour toutes
+     * les lignes — le filtre est neutralisé ; s'il est fourni, on compare
+     * normalement. Une seule requête préparée couvre ainsi les quatre
+     * combinaisons de filtres, sans jamais concaténer de SQL.
+     *
+     * Particularité PostgreSQL absente des sujets MySQL : sans le CAST,
+     * PostgreSQL ne sait pas déduire le type du paramètre dans « :param
+     * IS NULL » et rejette la requête (« could not determine data type »).
+     * CAST(x AS type) existe dans les deux SGBD.
+     *
+     * @param string|null $nature une des constantes de classe, ou null (toutes)
+     * @param string|null $date   au format AAAA-MM-JJ, ou null (toutes)
+     */
+    public function listerFiltre(?string $nature, ?string $date): array
+    {
+        $sql = "SELECT * FROM journal_evenements
+                WHERE (CAST(:date AS DATE) IS NULL OR DATE(date_heure) = CAST(:date AS DATE))
+                  AND (CAST(:nature AS VARCHAR) IS NULL OR nature = CAST(:nature AS VARCHAR))
+                ORDER BY date_heure DESC
+                LIMIT 200";
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([
+            'nature' => $nature,
+            'date'   => $date
+        ]);
+        return $stmt->fetchAll();
+    }
+
+    /**
      * Récupère l'adresse IP du client.
      *
      * Cette méthode est privée parce qu'elle est un détail d'implémentation :
