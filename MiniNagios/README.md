@@ -117,6 +117,8 @@ Vous pouvez maintenant vous connecter sur http://localhost:8082/public/login.php
 | `public/ajouter_admin.php` | Provisionne un compte et génère un lien magique |
 | `public/setup_password.php` | Page d'atterrissage du lien magique |
 | `public/setup.php` | Crée le compte administrateur de démonstration |
+| `public/journal.php` | Console de consultation filtrée du journal (connexion d'audit) |
+| `public/audit.php` | Détection d'anomalies : force brute, activité hors heures |
 | `public/api/serveurs.php` | API REST, protégée par l'en-tête `X-API-KEY` |
 
 Appel de l'API :
