@@ -12,8 +12,12 @@ try {
     // 1. On génère le VRAI hachage BCRYPT
     $hash = password_hash($motDePasseClair, PASSWORD_BCRYPT);
 
-    // 2. On nettoie si l'ancien faux compte existe
-    $pdo->exec("DELETE FROM administrateurs WHERE email = '$email'");
+    // 2. On nettoie si l'ancien faux compte existe.
+    // Même ici, où la variable ne vient pas de l'utilisateur, on passe par une
+    // requête préparée : une habitude prise sur les cas faciles est une habitude
+    // qui tiendra sur les cas dangereux.
+    $suppression = $pdo->prepare("DELETE FROM administrateurs WHERE email = :email");
+    $suppression->execute(['email' => $email]);
 
     // 3. On insère le compte proprement
     $stmt = $pdo->prepare("INSERT INTO administrateurs (email, password_hash) VALUES (:email, :hash)");
