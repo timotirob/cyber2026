@@ -102,6 +102,77 @@ class Journal
     }
 
     /**
+     * Détecte une attaque par force brute : les adresses IP ayant produit
+     * plus de $seuil échecs d'authentification sur les $minutes dernières
+     * minutes.
+     *
+     * La condition de date va dans WHERE (elle porte sur une colonne brute,
+     * et écarte les lignes AVANT le regroupement) ; la condition sur COUNT(*)
+     * va forcément dans HAVING : on ne peut pas compter avant d'avoir groupé.
+     *
+     * L'intervalle est paramétré par « :minutes * INTERVAL '1 minute' » :
+     * on ne peut pas placer un paramètre à l'intérieur d'un littéral
+     * INTERVAL, mais multiplier un intervalle d'une minute fonctionne.
+     * (Équivalent MySQL : DATE_SUB(NOW(), INTERVAL 10 MINUTE).)
+     */
+    public function detecterForceBrute(int $seuil = 5, int $minutes = 10): array
+    {
+        $sql = "SELECT adresse_ip, COUNT(*) AS nb_echecs
+                FROM journal_evenements
+                WHERE nature = :nature
+                  AND date_heure >= NOW() - :minutes * INTERVAL '1 minute'
+                GROUP BY adresse_ip
+                HAVING COUNT(*) > :seuil
+                ORDER BY nb_echecs DESC";
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([
+            'nature'  => self::ECHEC_AUTH,
+            'minutes' => $minutes,
+            'seuil'   => $seuil
+        ]);
+        return $stmt->fetchAll();
+    }
+
+    /**
+     * Compte les évènements par nature sur les dernières heures.
+     * C'est la requête « vue d'ensemble » : un pic soudain d'ECHEC_AUTH ou
+     * d'ACCES_REFUSE se repère ici avant toute analyse fine.
+     */
+    public function compterParNature(int $heures = 24): array
+    {
+        $sql = "SELECT nature, COUNT(*) AS nombre
+                FROM journal_evenements
+                WHERE date_heure >= NOW() - :heures * INTERVAL '1 hour'
+                GROUP BY nature
+                ORDER BY nombre DESC";
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute(['heures' => $heures]);
+        return $stmt->fetchAll();
+    }
+
+    /**
+     * Les connexions réussies survenues avant 7 h ou après 20 h au cours des
+     * 7 derniers jours. Une connexion administrateur à 3 h du matin est un
+     * signal faible classique de compromission : le mot de passe est bon,
+     * mais est-ce bien l'administrateur qui le tape ?
+     */
+    public function activiteHorsHeuresOuvrees(): array
+    {
+        $sql = "SELECT * FROM journal_evenements
+                WHERE nature = :nature
+                  AND date_heure >= NOW() - INTERVAL '7 days'
+                  AND (EXTRACT(HOUR FROM date_heure) < 7
+                       OR EXTRACT(HOUR FROM date_heure) >= 20)
+                ORDER BY date_heure DESC";
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute(['nature' => self::CONNEXION]);
+        return $stmt->fetchAll();
+    }
+
+    /**
      * Récupère l'adresse IP du client.
      *
      * Cette méthode est privée parce qu'elle est un détail d'implémentation :
