@@ -13,7 +13,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     try {
         // 2. Tentative de création
-        // C'est ici que Validator et le Constructeur vont travailler
+        // C'est ici que Validateur et le Constructeur vont travailler
         $nouveauServeur = new Serveur($nom, $ip, $os);
 
         // 3. Si on arrive ici, c'est que tout est OK

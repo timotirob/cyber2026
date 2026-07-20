@@ -14,7 +14,7 @@ class Serveur extends EquipementReseau
     public function __construct(string $hostname, string $ip, string $os, ?string $rootPasswordHybride = null)
     {
         // Validation de l'OS via la liste blanche
-        if (!Validator::isOsSupported($os)) {
+        if (!Validateur::estOsSupporte($os)) {
             throw new \Exception("POLITIQUE DSI : L'OS '$os' est interdit ou obsolète.");
         }
 

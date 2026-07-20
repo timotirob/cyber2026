@@ -9,7 +9,7 @@ class Imprimante extends EquipementReseau
     public function __construct(string $hostname, string $ip, string $type, bool $estCouleur)
     {
         // Validation AVANT le parent (Fail Fast)
-        if (!Validator::isPrinterTypeValid($type)) {
+        if (!Validateur::estTypeImprimanteValide($type)) {
             throw new \Exception("ERREUR : Le type d'imprimante '$type' n'est pas supporté par la DSI.");
         }
 

@@ -10,7 +10,7 @@ use App\SwitchReseau ;
 
 
 //$ipTest = "999.0.0.1";
-//if (App\Validator::isIpValid($ipTest)) {
+//if (App\Validateur::estIpValide($ipTest)) {
 //    echo "IP Valide";
 //} else {
 //    echo "IP Invalide (Sécurité activée)";
