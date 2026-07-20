@@ -4,6 +4,7 @@ error_reporting(E_ALL);
 require '../config/bootstrap.php';
 
 use App\Database;
+use App\Journal;
 
 /**
  * Hash leurre servant uniquement à égaliser le temps de réponse.
@@ -24,9 +25,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     try {
         $pdo = Database::getConnection();
+        $journal = new Journal($pdo);
 
         // 1. On cherche l'utilisateur par son email
-        $stmt = $pdo->prepare("SELECT id, password_hash FROM administrateurs WHERE email = :email");
+        $stmt = $pdo->prepare("SELECT id, email, password_hash FROM administrateurs WHERE email = :email");
         $stmt->execute(['email' => $email]);
         $admin = $stmt->fetch();
 
@@ -54,6 +56,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             $_SESSION['admin_id'] = $admin['id'];
 
+            // Une connexion réussie se journalise autant qu'un échec : sans
+            // elle, impossible de repérer une connexion administrateur à 3 h du
+            // matin, ni de reconstituer le parcours d'un compte compromis.
+            $journal->enregistrer(
+                Journal::CONNEXION,
+                $admin['email'],
+                (int) $admin['id'],
+                'authentification'
+            );
+
             header("Location: dashboard.php");
             exit();
         }
@@ -62,6 +74,22 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         // faux — passent par cette unique sortie et produisent le même message.
         // Dire « cet email n'existe pas » offrirait à un attaquant la liste des
         // comptes valides, sur laquelle concentrer ensuite sa force brute.
+        //
+        // On trace l'échec avec l'identifiant SAISI — et surtout pas le mot de
+        // passe. L'identifiant saisi est conservé même s'il ne correspond à
+        // aucun compte : c'est précisément ce qui permettra de distinguer plus
+        // tard le balayage aveugle de l'attaque ciblée.
+        //
+        // Noter la dissymétrie assumée : message pauvre pour l'utilisateur,
+        // journal riche pour l'exploitant. L'attaquant ne lit pas les journaux.
+        $journal->enregistrer(
+            Journal::ECHEC_AUTH,
+            $email,
+            null,
+            'authentification',
+            'Tentative de connexion infructueuse'
+        );
+
         header("Location: login.php?erreur=1");
         exit();
 
