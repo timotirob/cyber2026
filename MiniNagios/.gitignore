@@ -1,7 +1,12 @@
-composer.lock
 .phpunit.result.cache
 
-# Dépendances PHP
+# Dépendances PHP.
+# On ignore vendor/ (rechargeable par composer install) mais PAS composer.lock :
+# ce fichier fige les versions exactes de chaque bibliothèque. Sans lui, deux
+# étudiants qui clonent à quinze jours d'écart obtiennent des versions
+# différentes, et un bug reproductible chez l'un devient introuvable chez
+# l'autre. En sécurité, c'est aussi ce fichier qui permet de dire précisément
+# quelle version vulnérable a été déployée, et quand.
 /vendor/
 
 # Configuration secrète (Très important !)
