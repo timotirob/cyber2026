@@ -12,10 +12,14 @@ services:
   postgres-db:
     image: postgres:16-alpine
     container_name: nagios_postgres
+    # Les identifiants viennent du fichier .env, que Docker Compose lit tout seul
+    # dans le dossier du docker-compose.yml. Ce fichier est exclu de Git (voir
+    # .gitignore) : le dépôt ne contient donc plus aucun mot de passe.
+    # Le modèle à recopier se trouve dans .env.example.
     environment:
-      POSTGRES_USER: prof_sio
-      POSTGRES_PASSWORD: SecretPassword123!
-      POSTGRES_DB: mininagios
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASS}
+      POSTGRES_DB: ${DB_NAME}
     ports:
       - "5434:5432"
     volumes:
