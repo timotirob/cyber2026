@@ -75,18 +75,22 @@ Adaptez `-U prof_sio -d mininagios` si vous avez changé `DB_SUPER_USER` /
 `DB_NAME` dans votre `.env` : les migrations s'exécutent toujours avec le
 **superutilisateur**, jamais avec le compte applicatif.
 
-### 5. Définir le mot de passe du compte applicatif
+### 5. Définir les mots de passe des comptes restreints
 
 Depuis la séance 3, l'application ne se connecte plus en superutilisateur mais
-avec le rôle restreint `mininagios_app`, créé par la migration 004. Ce rôle est
-créé **sans mot de passe** — un mot de passe versionné dans une migration
-resterait lisible dans tout l'historique Git. Il faut donc le définir une fois,
-avec la valeur de `DB_PASS` de votre `.env` :
+avec deux rôles restreints créés par la migration 004 : `mininagios_app` (le
+quotidien de l'application) et `mininagios_audit` (lecture seule du journal,
+pour les pages de supervision). Ces rôles sont créés **sans mot de passe** —
+un mot de passe versionné dans une migration resterait lisible dans tout
+l'historique Git. Il faut donc les définir une fois, avec les valeurs de
+votre `.env` :
 
 ```bash
 source .env
 docker exec nagios_postgres psql -U "$DB_SUPER_USER" -d "$DB_NAME" \
     -c "ALTER ROLE mininagios_app WITH PASSWORD '$DB_PASS';"
+docker exec nagios_postgres psql -U "$DB_SUPER_USER" -d "$DB_NAME" \
+    -c "ALTER ROLE mininagios_audit WITH PASSWORD '$DB_AUDIT_PASS';"
 ```
 
 Tant que cette commande n'a pas été exécutée, l'application affichera une
