@@ -41,10 +41,15 @@ try {
         'hash'  => $hash
     ]);
 
+    // CORRECTION SÉANCE 3 (exercice 3) : la page affichait le mot de passe en
+    // clair, et même le hash. Critère DICP touché : la Confidentialité.
+    // Vecteurs de fuite concrets : un écran resté ouvert en salle, une capture
+    // d'écran dans un compte rendu, le cache du navigateur, un partage d'écran
+    // en visio. Un secret qui s'affiche n'est plus un secret ; le hash, lui,
+    // offre à un attaquant une cible de cassage hors ligne.
     echo "<h3 style='color:green'>✅ Administrateur créé avec succès !</h3>";
-    echo "<p>Email : <strong>$email</strong></p>";
-    echo "<p>Mot de passe : <strong>$motDePasseClair</strong></p>";
-    echo "<p>Hash généré en BDD : <br><code>$hash</code></p>";
+    echo "<p>Email : <strong>" . htmlspecialchars($email) . "</strong></p>";
+    echo "<p>Le mot de passe est celui défini dans ce script. Il ne s'affiche pas ici.</p>";
     echo "<a href='login.php'>Aller à la page de connexion</a>";
 
 } catch (Exception $e) {
