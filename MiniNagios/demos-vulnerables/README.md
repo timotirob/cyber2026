@@ -29,3 +29,4 @@ doit y figurer comme exclu. Ce fichier sert de rappel.
 | Fichier | Faille démontrée | Version corrigée |
 |---|---|---|
 | `recherche_vulnerable.php` | Injection SQL (concaténation dans `query()`) | `public/recherche.php` |
+| `recherche_aveugle_vulnerable.php` | Injection SQL à l'aveugle (*blind SQLi*) : erreurs et résultats masqués | `public/recherche.php` (la requête préparée ferme aussi cette variante) |
