@@ -75,7 +75,25 @@ Adaptez `-U prof_sio -d mininagios` si vous avez changé `DB_SUPER_USER` /
 `DB_NAME` dans votre `.env` : les migrations s'exécutent toujours avec le
 **superutilisateur**, jamais avec le compte applicatif.
 
-### 5. Créer le compte administrateur
+### 5. Définir le mot de passe du compte applicatif
+
+Depuis la séance 3, l'application ne se connecte plus en superutilisateur mais
+avec le rôle restreint `mininagios_app`, créé par la migration 004. Ce rôle est
+créé **sans mot de passe** — un mot de passe versionné dans une migration
+resterait lisible dans tout l'historique Git. Il faut donc le définir une fois,
+avec la valeur de `DB_PASS` de votre `.env` :
+
+```bash
+source .env
+docker exec nagios_postgres psql -U "$DB_SUPER_USER" -d "$DB_NAME" \
+    -c "ALTER ROLE mininagios_app WITH PASSWORD '$DB_PASS';"
+```
+
+Tant que cette commande n'a pas été exécutée, l'application affichera une
+erreur d'authentification PostgreSQL : le rôle existe mais ne peut pas se
+connecter par le réseau.
+
+### 6. Créer le compte administrateur
 
 Ouvrez http://localhost:8082/public/setup.php — le compte
 `admin@mininagios.local` est créé avec le mot de passe `BtsSlam2026!`.
@@ -211,7 +229,8 @@ docker compose down -v   # ATTENTION : efface toutes les données
 docker compose up -d
 ```
 
-Puis rejouer les migrations et `setup.php`.
+Puis rejouer les migrations, l'étape 5 (mot de passe du compte applicatif)
+et `setup.php`.
 
 **La page est blanche** — regardez les journaux Apache :
 
