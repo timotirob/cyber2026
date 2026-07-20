@@ -25,13 +25,25 @@ class Securite
      */
     public static function verifierCleApi(): void
     {
-        $cleSecrete = 'BtsSlamApi2026'; // Clé statique pour l'exercice
+        // La clé vient du fichier .env, jamais du code source.
+        // Une clé écrite en dur part dans l'historique Git : la changer plus tard
+        // ne l'efface pas, elle reste lisible dans tous les anciens commits et
+        // dans toutes les copies du dépôt.
+        $cleSecrete = $_ENV['API_SECRET_KEY'] ?? $_SERVER['API_SECRET_KEY'] ?? getenv('API_SECRET_KEY');
+
+        if (!$cleSecrete) {
+            throw new \Exception("ERREUR DEV : API_SECRET_KEY absente du fichier .env.");
+        }
 
         // On cherche l'en-tête personnalisé envoyé par le client
         // PHP préfixe les en-têtes personnalisés par HTTP_ et remplace les tirets par des underscores
         $cleFournie = $_SERVER['HTTP_X_API_KEY'] ?? '';
 
-        if ($cleFournie !== $cleSecrete) {
+        // hash_equals() compare les deux chaînes en un temps constant, quel que
+        // soit le nombre de caractères déjà justes. Un !== classique s'arrête au
+        // premier caractère qui diffère : en chronométrant les réponses, un
+        // attaquant reconstituerait la clé caractère par caractère.
+        if (!hash_equals($cleSecrete, $cleFournie)) {
             // Accès refusé : on modifie le statut HTTP à 401 (Unauthorized)
             http_response_code(401);
 
