@@ -16,9 +16,15 @@ services:
     # dans le dossier du docker-compose.yml. Ce fichier est exclu de Git (voir
     # .gitignore) : le dépôt ne contient donc plus aucun mot de passe.
     # Le modèle à recopier se trouve dans .env.example.
+    #
+    # ATTENTION : c'est bien le compte SUPERUTILISATEUR qui est créé ici, à
+    # l'initialisation du conteneur. L'application, elle, se connecte avec
+    # DB_USER / DB_PASS — un compte restreint distinct. Mélanger les deux
+    # reviendrait à faire tourner l'application en superutilisateur, ce que
+    # la séance 3 (moindre privilège) interdit précisément.
     environment:
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASS}
+      POSTGRES_USER: ${DB_SUPER_USER}
+      POSTGRES_PASSWORD: ${DB_SUPER_PASS}
       POSTGRES_DB: ${DB_NAME}
     ports:
       - "5434:5432"

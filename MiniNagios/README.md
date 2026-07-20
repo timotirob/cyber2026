@@ -22,7 +22,7 @@ cd MiniNagios
 cp .env.example .env
 ```
 
-Ouvrez ensuite `.env` et remplacez les trois `changez_moi`. Choisissez ce que
+Ouvrez ensuite `.env` et remplacez tous les `changez_moi`. Choisissez ce que
 vous voulez, mais retenez-le : ces valeurs servent à créer la base.
 
 > **Ne versionnez jamais votre `.env`.** Un secret poussé sur un dépôt reste
@@ -71,8 +71,9 @@ La boucle les applique toutes, dans l'ordre alphabétique — c'est précisémen
 ça que sert le préfixe numérique des noms de fichiers. Rejouez-la après chaque
 nouvelle séance : les migrations déjà appliquées ne feront rien.
 
-Adaptez `-U prof_sio -d mininagios` si vous avez changé `DB_USER` / `DB_NAME`
-dans votre `.env`.
+Adaptez `-U prof_sio -d mininagios` si vous avez changé `DB_SUPER_USER` /
+`DB_NAME` dans votre `.env` : les migrations s'exécutent toujours avec le
+**superutilisateur**, jamais avec le compte applicatif.
 
 ### 5. Créer le compte administrateur
 
@@ -201,9 +202,9 @@ refaire.
 
 **`vendor/autoload.php` introuvable** — l'étape 2 n'a pas été faite.
 
-**Erreur d'authentification PostgreSQL après avoir changé `DB_PASS`** — le mot
-de passe est figé à la création de la base. Changer `.env` ensuite ne suffit
-pas, il faut recréer le volume :
+**Erreur d'authentification PostgreSQL après avoir changé `DB_SUPER_PASS`** —
+le mot de passe du superutilisateur est figé à la création de la base. Changer
+`.env` ensuite ne suffit pas, il faut recréer le volume :
 
 ```bash
 docker compose down -v   # ATTENTION : efface toutes les données
