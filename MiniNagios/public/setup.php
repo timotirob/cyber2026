@@ -23,15 +23,19 @@ try {
     // PHP choisit seul le sel et les paramètres de coût.
     $hash = password_hash($motDePasseClair, PASSWORD_ARGON2ID);
 
-    // 3. On nettoie si l'ancien faux compte existe.
-    // Même ici, où la variable ne vient pas de l'utilisateur, on passe par une
-    // requête préparée : une habitude prise sur les cas faciles est une habitude
-    // qui tiendra sur les cas dangereux.
-    $suppression = $pdo->prepare("DELETE FROM administrateurs WHERE email = :email");
-    $suppression->execute(['email' => $email]);
-
-    // 4. On insère le compte proprement
-    $stmt = $pdo->prepare("INSERT INTO administrateurs (email, password_hash) VALUES (:email, :hash)");
+    // 3. On insère le compte, ou on met à jour son mot de passe s'il existe.
+    // L'ancienne version faisait un DELETE puis un INSERT. Or depuis la
+    // séance 3, le compte applicatif n'a plus le droit DELETE sur cette
+    // table : supprimer un administrateur est une opération d'exploitation,
+    // pas une opération applicative. Le "UPSERT" ci-dessous rend le DELETE
+    // inutile — et conserve au passage l'id du compte, donc les traces du
+    // journal qui pointent vers lui.
+    // (Équivalent MySQL, pour l'épreuve : INSERT ... ON DUPLICATE KEY UPDATE.)
+    $stmt = $pdo->prepare(
+        "INSERT INTO administrateurs (email, password_hash)
+         VALUES (:email, :hash)
+         ON CONFLICT (email) DO UPDATE SET password_hash = EXCLUDED.password_hash"
+    );
     $stmt->execute([
         'email' => $email,
         'hash'  => $hash
