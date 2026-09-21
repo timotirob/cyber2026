@@ -1,5 +1,5 @@
 <?php
-require '../vendor/autoload.php';
+require '../config/bootstrap.php';
 
 use App\Database;
 use App\ServeurRepository;
